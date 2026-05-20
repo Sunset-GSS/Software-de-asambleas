@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Validación de Habilitaciones</h1>
+    <div class="page-actions">
+        <select id="asamblea-select" onchange="cargarHabilitaciones()">
+            <option value="">Seleccionar asamblea...</option>
+            {% for asamblea in asambleas %}
+            <option value="{{ asamblea.id_asamblea }}">{{ asamblea.titulo }} - {{ asamblea.fecha }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary" onclick="generarHabilitaciones()">🔄 Generar/Recalcular</button>
+        <button class="btn btn-success" onclick="exportarPadron()">📥 Exportar Padrón</button>
+    </div>
+</div>
+
+<div class="stats-mini">
+    <div class="stat-mini stat-success">
+        <span class="stat-num" id="total-habilitados">0</span>
+        <span class="stat-label">Habilitados con Voz y Voto</span>
+    </div>
+    <div class="stat-mini stat-warning">
+        <span class="stat-num" id="total-solo-voz">0</span>
+        <span class="stat-label">Solo Voz (sin voto)</span>
+    </div>
+    <div class="stat-mini stat-danger">
+        <span class="stat-num" id="total-inhabilitados">0</span>
+        <span class="stat-label">Inhabilitados</span>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header">
+        <input type="text" id="busqueda-habilitacion" placeholder="🔍 Buscar socio..." onkeyup="filtrarTabla()">
+    </div>
+    <div class="card-body">
+        <table class="table" id="tabla-habilitaciones">
+            <thead>
+                <tr>
+                    <th>N° Socio</th>
+                    <th>Nombre</th>
+                    <th>Voz</th>
+                    <th>Voto</th>
+                    <th>Motivo Inhabilitación</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="6" class="text-center text-muted">Seleccione una asamblea para ver las habilitaciones
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function cargarHabilitaciones() {
+        const asambleaId = document.getElementById('asamblea-select').value;
+        if (!asambleaId) return;
+
+        fetch(`/habilitaciones/listar/${asambleaId}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('total-habilitados').textContent = data.total_habilitados;
+                document.getElementById('total-solo-voz').textContent = data.total_solo_voz;
+                document.getElementById('total-inhabilitados').textContent = data.total_inhabilitados;
+
+                const tbody = document.getElementById('tabla-habilitaciones').querySelector('tbody');
+                tbody.innerHTML = data.habilitaciones.map(h => `
+                <tr>
+                    <td><strong>${h.numero_socio}</strong></td>
+                    <td>${h.nombre}</td>
+                    <td>
+                        <span class="badge ${h.tiene_voz ? 'badge-success' : 'badge-danger'}">
+                            ${h.tiene_voz ? '✅ Habilitado' : '❌ No'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${h.tiene_voto ? 'badge-success' : 'badge-danger'}">
+                            ${h.tiene_voto ? '✅ Habilitado' : '❌ No'}
+                        </span>
+                    </td>
+                    <td class="text-danger">${h.motivo_inhabilitacion || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="toggleVoto(${h.id_habilitacion})">
+                            🔄 Cambiar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            });
+    }
+
+    function generarHabilitaciones() {
+        const asambleaId = document.getElementById('asamblea-select').value;
+        if (!asambleaId) {
+            alert('Seleccione una asamblea primero');
+            return;
+        }
+
+        if (confirm('¿Está seguro de recalcular las habilitaciones? Esto sobrescribirá los ajustes manuales.')) {
+            fetch(`/habilitaciones/generar/${asambleaId}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    cargarHabilitaciones();
+                });
+        }
+    }
+
+    function toggleVoto(idHabilitacion) {
+        if (confirm('¿Desea cambiar manualmente el estado de votación de este socio?')) {
+            fetch(`/habilitaciones/toggle-voto/${idHabilitacion}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    cargarHabilitaciones();
+                });
+        }
+    }
+
+    function filtrarTabla() {
+        const busqueda = document.getElementById('busqueda-habilitacion').value.toLowerCase();
+        const filas = document.querySelectorAll('#tabla-habilitaciones tbody tr');
+        filas.forEach(fila => {
+            const texto = fila.textContent.toLowerCase();
+            fila.style.display = texto.includes(busqueda) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

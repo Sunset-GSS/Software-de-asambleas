@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Registrar Pago de Cuota</h1>
+</div>
+
+<div class="card form-card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('cuotas.registrar') }}" class="form-grid">
+            <div class="form-group">
+                <label for="numero_socio">Número de Socio *</label>
+                <input type="text" id="numero_socio" name="numero_socio" placeholder="Buscar socio..." required
+                    onkeyup="buscarSocioParaPago()">
+                <div id="resultado-busqueda-socio" class="search-result"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="periodo">Período (AAAA-MM) *</label>
+                <input type="month" id="periodo" name="periodo" required>
+            </div>
+
+            <div class="form-group">
+                <label for="monto">Monto (Gs.) *</label>
+                <input type="number" id="monto" name="monto" step="0.01" placeholder="0.00" required>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_pago">Fecha de Pago *</label>
+                <input type="date" id="fecha_pago" name="fecha_pago" value="{{ hoy }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="comprobante">N° Comprobante</label>
+                <input type="text" id="comprobante" name="comprobante" placeholder="Número de recibo">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Registrar Pago</button>
+                <a href="{{ url_for('cuotas.listar') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function buscarSocioParaPago() {
+        const query = document.getElementById('numero_socio').value;
+        if (query.length < 2) return;
+
+        fetch(`/socios/buscar?q=${query}&limit=5`)
+            .then(res => res.json())
+            .then(data => {
+                const resultado = document.getElementById('resultado-busqueda-socio');
+                if (data.length > 0) {
+                    resultado.innerHTML = data.map(s => `
+                    <div class="search-item" onclick="seleccionarSocio('${s.numero_socio}', '${s.nombre_completo}')">
+                        <strong>${s.numero_socio}</strong> - ${s.nombre_completo}
+                    </div>
+                `).join('');
+                    resultado.style.display = 'block';
+                } else {
+                    resultado.innerHTML = '<div class="search-item text-muted">No se encontraron socios</div>';
+                    resultado.style.display = 'block';
+                }
+            });
+    }
+
+    function seleccionarSocio(numero, nombre) {
+        document.getElementById('numero_socio').value = numero;
+        document.getElementById('resultado-busqueda-socio').style.display = 'none';
+        document.getElementById('resultado-busqueda-socio').innerHTML =
+            `<div class="search-item selected">✅ ${numero} - ${nombre}</div>`;
+        document.getElementById('resultado-busqueda-socio').style.display = 'block';
+    }
+</script>
+{% endblock %}

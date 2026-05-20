@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Gestión de Socios</h1>
+    <div class="page-actions">
+        <a href="{{ url_for('socios.crear') }}" class="btn btn-primary">+ Nuevo Socio</a>
+        <button class="btn btn-secondary" onclick="document.getElementById('import-csv').click()">📥 Importar
+            CSV</button>
+        <input type="file" id="import-csv" accept=".csv" style="display:none" onchange="importarCSV(this)">
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="search-bar">
+            <input type="text" id="busqueda-socio" placeholder="🔍 Buscar por N° Socio, Nombre o Documento..."
+                onkeyup="buscarSocios()">
+            <select id="filtro-estado" onchange="buscarSocios()">
+                <option value="todos">Todos los estados</option>
+                <option value="activo">Activos</option>
+                <option value="suspendido">Suspendidos</option>
+                <option value="retirado">Retirados</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>N° Socio</th>
+                    <th>Nombre Completo</th>
+                    <th>Documento</th>
+                    <th>Fecha Ingreso</th>
+                    <th>Estado</th>
+                    <th>Cuotas al día</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-socios">
+                {% for socio in socios %}
+                <tr>
+                    <td><strong>{{ socio.numero_socio }}</strong></td>
+                    <td>{{ socio.nombre_completo }}</td>
+                    <td>{{ socio.documento_identidad }}</td>
+                    <td>{{ socio.fecha_ingreso.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <span
+                            class="badge {% if socio.estado == 'activo' %}badge-success{% elif socio.estado == 'suspendido' %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ socio.estado | title }}
+                        </span>
+                    </td>
+                    <td>
+                        {% set al_dia = socio.ultimas_cuotas_pagas() %}
+                        <span class="badge {% if al_dia >= 1 %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ al_dia }} mes(es)
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('socios.editar', id=socio.id_socio) }}"
+                            class="btn btn-sm btn-secondary">✏️</a>
+                        <a href="{{ url_for('cuotas.ver_socio', id=socio.id_socio) }}"
+                            class="btn btn-sm btn-info">💰</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function buscarSocios() {
+        const busqueda = document.getElementById('busqueda-socio').value;
+        const estado = document.getElementById('filtro-estado').value;
+
+        fetch(`/socios/buscar?q=${busqueda}&estado=${estado}`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('tabla-socios');
+                tbody.innerHTML = data.map(s => `
+                <tr>
+                    <td><strong>${s.numero_socio}</strong></td>
+                    <td>${s.nombre_completo}</td>
+                    <td>${s.documento_identidad}</td>
+                    <td>${s.fecha_ingreso}</td>
+                    <td><span class="badge badge-${s.estado_color}">${s.estado}</span></td>
+                    <td><span class="badge badge-${s.al_dia ? 'success' : 'danger'}">${s.cuotas_al_dia} mes(es)</span></td>
+                    <td>
+                        <a href="/socios/editar/${s.id_socio}" class="btn btn-sm btn-secondary">✏️</a>
+                        <a href="/cuotas/socio/${s.id_socio}" class="btn btn-sm btn-info">💰</a>
+                    </td>
+                </tr>
+            `).join('');
+            });
+    }
+</script>
+{% endblock %}

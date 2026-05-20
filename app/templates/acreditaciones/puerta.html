@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="acreditacion-container">
+    <div class="acreditacion-header">
+        <h1>🚪 ACREDITACIÓN EN PUERTA</h1>
+        <div class="asamblea-info">
+            <span class="asamblea-titulo">{{ asamblea.titulo }}</span>
+            <span class="asamblea-fecha">{{ asamblea.fecha }} - {{ asamblea.hora_inicio }}</span>
+            <span class="asamblea-lugar">📍 {{ asamblea.ubicacion }}</span>
+        </div>
+        <div class="contador-acreditados">
+            <span class="contador-num" id="contador-acreditados">{{ total_acreditados }}</span>
+            <span class="contador-label">Acreditados</span>
+        </div>
+    </div>
+
+    <div class="busqueda-acreditacion">
+        <input type="text" id="busqueda-socio-acreditacion"
+            placeholder="🔍 ESCANEE o INGRESE N° de Socio o Documento..." autofocus onkeyup="buscarSocioAcreditacion()"
+            onkeydown="if(event.key==='Enter') buscarSocioAcreditacion()">
+        <div id="resultado-acreditacion" class="resultado-acreditacion"></div>
+    </div>
+
+    <div id="info-socio" class="info-socio-card" style="display:none;">
+        <div class="socio-header">
+            <div class="socio-foto">
+                <div class="foto-placeholder">👤</div>
+            </div>
+            <div class="socio-datos">
+                <h2 id="socio-nombre">---</h2>
+                <p><strong>N° Socio:</strong> <span id="socio-numero">---</span></p>
+                <p><strong>Documento:</strong> <span id="socio-documento">---</span></p>
+            </div>
+        </div>
+
+        <div class="habilitacion-flags">
+            <div class="flag" id="flag-voz">
+                <div class="flag-icon">🎤</div>
+                <div class="flag-label">VOZ</div>
+                <div class="flag-status" id="voz-status">---</div>
+            </div>
+            <div class="flag" id="flag-voto">
+                <div class="flag-icon">🗳️</div>
+                <div class="flag-label">VOTO</div>
+                <div class="flag-status" id="voto-status">---</div>
+            </div>
+        </div>
+
+        <div id="motivo-inhabilitacion" class="motivo-inhabilitacion" style="display:none;"></div>
+
+        <div class="accion-acreditacion">
+            <button id="btn-acreditar" class="btn btn-acreditar btn-block" onclick="acreditarSocio()" disabled>
+                ✅ ACREDITAR ASISTENCIA
+            </button>
+            <div id="mensaje-acreditacion" class="mensaje-acreditacion"></div>
+        </div>
+    </div>
+
+    <div class="ultimos-acreditados-marquee">
+        <div class="marquee-content" id="marquee-acreditados">
+            Esperando acreditaciones...
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let socioSeleccionado = null;
+
+    function buscarSocioAcreditacion() {
+        const query = document.getElementById('busqueda-socio-acreditacion').value.trim();
+        if (query.length < 2) {
+            document.getElementById('resultado-acreditacion').innerHTML = '';
+            return;
+        }
+
+        fetch(`/acreditaciones/buscar-socio?q=${query}`)
+            .then(res => res.json())
+            .then(data => {
+                const resultado = document.getElementById('resultado-acreditacion');
+
+                if (data.error) {
+                    resultado.innerHTML = `<div class="resultado-error">${data.error}</div>`;
+                    ocultarInfoSocio();
+                    return;
+                }
+
+                if (data.length === 1) {
+                    // Si hay un solo resultado, mostrarlo directamente
+                    mostrarInfoSocio(data[0]);
+                    resultado.innerHTML = '';
+                } else if (data.length > 1) {
+                    // Múltiples resultados, mostrar lista para seleccionar
+                    resultado.innerHTML = data.map(s => `
+                    <div class="resultado-item" onclick="mostrarInfoSocio(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+                        <strong>${s.numero_socio}</strong> - ${s.nombre_completo} (${s.documento_identidad})
+                    </div>
+                `).join('');
+                }
+            });
+    }
+
+    function mostrarInfoSocio(socio) {
+        socioSeleccionado = socio;
+
+        document.getElementById('info-socio').style.display = 'block';
+        document.getElementById('socio-nombre').textContent = socio.nombre_completo;
+        document.getElementById('socio-numero').textContent = socio.numero_socio;
+        document.getElementById('socio-documento').textContent = socio.documento_identidad;
+
+        // Flag VOZ
+        const flagVoz = document.getElementById('flag-voz');
+        const vozStatus = document.getElementById('voz-status');
+        if (socio.tiene_voz) {
+            flagVoz.className = 'flag flag-success';
+            vozStatus.textContent = 'HABILITADO';
+            vozStatus.className = 'flag-status text-success';
+        } else {
+            flagVoz.className = 'flag flag-danger';
+            vozStatus.textContent = 'NO HABILITADO';
+            vozStatus.className = 'flag-status text-danger';
+        }
+
+        // Flag VOTO
+        const flagVoto = document.getElementById('flag-voto');
+        const votoStatus = document.getElementById('voto-status');
+        if (socio.tiene_voto) {
+            flagVoto.className = 'flag flag-success';
+            votoStatus.textContent = 'HABILITADO';
+            votoStatus.className = 'flag-status text-success';
+        } else {
+            flagVoto.className = 'flag flag-danger';
+            votoStatus.textContent = 'NO HABILITADO';
+            votoStatus.className = 'flag-status text-danger';
+        }
+
+        // Motivo inhabilitación
+        const motivoDiv = document.getElementById('motivo-inhabilitacion');
+        if (socio.motivo_inhabilitacion) {
+            motivoDiv.style.display = 'block';
+            motivoDiv.innerHTML = `<strong>⚠️ Motivo:</strong> ${socio.motivo_inhabilitacion}`;
+            motivoDiv.className = 'motivo-inhabilitacion motivo-danger';
+        } else {
+            motivoDiv.style.display = 'none';
+        }
+
+        // Verificar si ya está acreditado
+        const btnAcreditar = document.getElementById('btn-acreditar');
+        const mensajeDiv = document.getElementById('mensaje-acreditacion');
+
+        if (socio.ya_acreditado) {
+            btnAcreditar.disabled = true;
+            btnAcreditar.textContent = '⚠️ SOCIO YA ACREDITADO';
+            btnAcreditar.className = 'btn btn-warning btn-block';
+            mensajeDiv.innerHTML = `<div class="alert alert-warning">Este socio ya fue acreditado el ${socio.fecha_acreditacion}</div>`;
+        } else {
+            btnAcreditar.disabled = false;
+            btnAcreditar.textContent = '✅ ACREDITAR ASISTENCIA';
+            btnAcreditar.className = 'btn btn-acreditar btn-block';
+            mensajeDiv.innerHTML = '';
+        }
+
+        document.getElementById('resultado-acreditacion').innerHTML = '';
+        document.getElementById('busqueda-socio-acreditacion').value = '';
+        document.getElementById('busqueda-socio-acreditacion').focus();
+    }
+
+    function acreditarSocio() {
+        if (!socioSeleccionado) return;
+
+        const btnAcreditar = document.getElementById('btn-acreditar');
+        btnAcreditar.disabled = true;
+        btnAcreditar.textContent = '⏳ ACREDITANDO...';
+
+        fetch('/acreditaciones/acreditar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_socio: socioSeleccionado.id_socio,
+                id_asamblea: parseInt('{{ asamblea.id_asamblea }}', 10)
+            })
+        })
+    .then(res => res.json())
+        .then(data => {
+            const mensajeDiv = document.getElementById('mensaje-acreditacion');
+
+            if (data.success) {
+                mensajeDiv.innerHTML = `<div class="alert alert-success">✅ ${data.mensaje}</div>`;
+                btnAcreditar.textContent = '✅ ACREDITADO CON ÉXITO';
+                btnAcreditar.className = 'btn btn-success btn-block';
+
+                // Actualizar contador
+                const contador = document.getElementById('contador-acreditados');
+                contador.textContent = parseInt(contador.textContent) + 1;
+                contador.classList.add('contador-animation');
+                setTimeout(() => contador.classList.remove('contador-animation'), 1000);
+
+                // Actualizar marquee
+                actualizarMarquee(socioSeleccionado.nombre_completo);
+
+                // Limpiar después de 3 segundos
+                setTimeout(() => {
+                    ocultarInfoSocio();
+                    document.getElementById('busqueda-socio-acreditacion').focus();
+                }, 3000);
+
+                // Reproducir sonido de éxito
+                reproducirSonido('success');
+            } else {
+                mensajeDiv.innerHTML = `<div class="alert alert-danger">❌ ${data.error}</div>`;
+                btnAcreditar.disabled = false;
+                btnAcreditar.textContent = '🔄 REINTENTAR ACREDITACIÓN';
+                btnAcreditar.className = 'btn btn-danger btn-block';
+
+                reproducirSonido('error');
+            }
+        })
+        .catch(error => {
+            document.getElementById('mensaje-acreditacion').innerHTML =
+                '<div class="alert alert-danger">❌ Error de conexión. Intente nuevamente.</div>';
+            btnAcreditar.disabled = false;
+            btnAcreditar.textContent = '🔄 REINTENTAR ACREDITACIÓN';
+        });
+}
+
+    function ocultarInfoSocio() {
+        document.getElementById('info-socio').style.display = 'none';
+        socioSeleccionado = null;
+    }
+
+    function actualizarMarquee(nombre) {
+        const marquee = document.getElementById('marquee-acreditados');
+        const hora = new Date().toLocaleTimeString();
+        marquee.innerHTML = `🟢 ${nombre} acreditado a las ${hora} | ${marquee.innerHTML}`;
+        // Limitar a 10 entradas
+        const partes = marquee.innerHTML.split('|');
+        if (partes.length > 10) {
+            marquee.innerHTML = partes.slice(0, 10).join('|');
+        }
+    }
+
+    function reproducirSonido(tipo) {
+        // Implementar sonidos con Web Audio API o archivos de audio
+        const audio = new Audio(`/static/audio/${tipo}.mp3`);
+        audio.volume = 0.3;
+        audio.play().catch(() => { }); // Ignorar errores si el navegador bloquea
+    }
+</script>
+{% endblock %}
