@@ -1,7 +1,7 @@
 import os
 from app import create_app
 from app.extensions import db, bcrypt
-from app.models import Rol, Usuario, Socio, Mora, Asamblea
+from app.models import Rol, Usuario, Socio, Estado, Asamblea
 
 app = create_app()
 
@@ -30,15 +30,65 @@ def seed_db():
             db.session.add(admin_user)
             db.session.commit()
             
-            print("Creando socio de prueba...")
-            socio = Socio(
+            print("Creando socio habilitado...")
+            socio_ok = Socio(
                 cedula='1234567',
                 nro_socio='0001',
                 nombres='Juan',
                 apellidos='Pérez',
+                trabajo='Municipalidad',
+                agencia='Central',
                 situacion='activo'
             )
-            db.session.add(socio)
+            db.session.add(socio_ok)
+            db.session.commit()
+            
+            estado_ok = Estado(
+                socio_id=socio_ok.id,
+                mora_cc='al_dia',
+                mora_sol='al_dia',
+                mora_ape='al_dia',
+                mora_credito='al_dia',
+                mora_cabal='al_dia',
+                mora_visa='al_dia'
+            )
+            db.session.add(estado_ok)
+            db.session.commit()
+
+            print("Creando socio moroso...")
+            socio_mora = Socio(
+                cedula='7654321',
+                nro_socio='0002',
+                nombres='María',
+                apellidos='Gómez',
+                trabajo='Hospital Regional',
+                agencia='Sucursal Norte',
+                situacion='activo'
+            )
+            db.session.add(socio_mora)
+            db.session.commit()
+            
+            estado_mora = Estado(
+                socio_id=socio_mora.id,
+                mora_cc='al_dia',
+                mora_sol='moroso',
+                mora_ape='al_dia',
+                mora_credito='moroso',
+                mora_cabal='al_dia',
+                mora_visa='al_dia'
+            )
+            db.session.add(estado_mora)
+            db.session.commit()
+            
+            print("Creando asamblea de prueba...")
+            asamblea = Asamblea(
+                tipo='ordinaria',
+                fecha=db.func.current_date(),
+                lugar='Salón Municipal de Zelaya',
+                quorum_minimo=50,
+                estado='programada'
+            )
+            db.session.add(asamblea)
             db.session.commit()
             
             print("Base de datos inicializada correctamente.")
@@ -47,3 +97,4 @@ def seed_db():
 
 if __name__ == '__main__':
     seed_db()
+

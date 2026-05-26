@@ -18,7 +18,7 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Nombre Completo</span>
-                        <span class="fw-bold">{{ socio.nombres }} {{ socio.apellidos }}</span>
+                        <span class="fw-bold">{{ socio.apellidos_nombres }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Cédula de Identidad</span>
@@ -55,36 +55,83 @@
                     {% endif %}
                 </div>
 
-                <h6 class="text-muted fw-bold text-uppercase small mb-3">Historial de Productos en Mora</h6>
-                {% if moras %}
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Estado</th>
-                                    <th>Fecha de Consulta</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for mora in moras %}
-                                <tr>
-                                    <td class="fw-bold">{{ mora.producto }}</td>
-                                    <td><span class="badge bg-danger">{{ mora.estado }}</span></td>
-                                    <td>{{ mora.fecha_consulta }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="alert alert-success d-flex align-items-center" role="alert">
-                        <i class="fa-solid fa-info-circle me-2"></i>
-                        <div>El socio está al día con sus obligaciones. No se registran moras activas.</div>
-                    </div>
-                {% endif %}
+                <h6 class="text-muted fw-bold text-uppercase small mb-3">Detalle de Obligaciones (Oracle APEX ER)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Obligación / Producto</th>
+                                <th>Estado de Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">Caja de Ahorro / CC (MoraCC)</td>
+                                <td>
+                                    {% if estado_socio.mora_cc == 'al_dia' %}
+                                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Al Día</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Moroso</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Solidaridad (MoraSOL)</td>
+                                <td>
+                                    {% if estado_socio.mora_sol == 'al_dia' %}
+                                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Al Día</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Moroso</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Aporte (MoraAPE)</td>
+                                <td>
+                                    {% if estado_socio.mora_ape == 'al_dia' %}
+                                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Al Día</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Moroso</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Créditos (MoraCREDITO)</td>
+                                <td>
+                                    {% if estado_socio.mora_credito == 'al_dia' %}
+                                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Al Día</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Moroso</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Tarjeta Cabal (MoraCABAL)</td>
+                                <td>
+                                    {% if estado_socio.mora_cabal == 'al_dia' %}
+                                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Al Día</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Moroso</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Tarjeta Visa (MoraVISA)</td>
+                                <td>
+                                    {% if estado_socio.mora_visa == 'al_dia' %}
+                                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Al Día</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Moroso</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+

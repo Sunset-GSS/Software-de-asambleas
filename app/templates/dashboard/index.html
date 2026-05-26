@@ -19,7 +19,7 @@
                 </div>
                 <h5 class="card-title fw-bold">Gestión de Socios</h5>
                 <p class="card-text text-muted small">Administra los datos personales y revisa el estado de morosidad de los cooperativistas.</p>
-                <a href="#" class="btn btn-outline-primary mt-2">Ir a Socios</a>
+                <a href="{{ url_for('socios.index') }}" class="btn btn-outline-primary mt-2">Ir a Socios</a>
             </div>
         </div>
     </div>
@@ -33,7 +33,7 @@
                 </div>
                 <h5 class="card-title fw-bold">Asambleas</h5>
                 <p class="card-text text-muted small">Crea eventos, genera el padrón de habilitados e imprime las credenciales.</p>
-                <a href="#" class="btn btn-outline-success mt-2">Ir a Asambleas</a>
+                <a href="{{ url_for('asambleas.index') }}" class="btn btn-outline-success mt-2">Ir a Asambleas</a>
             </div>
         </div>
     </div>
@@ -47,7 +47,7 @@
                 </div>
                 <h5 class="card-title fw-bold">Mociones y Votos</h5>
                 <p class="card-text text-muted small">Configura las opciones de votación y realiza el escrutinio electrónico.</p>
-                <a href="#" class="btn btn-outline-warning mt-2">Ir a Votaciones</a>
+                <a href="{{ url_for('votacion.index') }}" class="btn btn-outline-warning mt-2">Ir a Votaciones</a>
             </div>
         </div>
     </div>

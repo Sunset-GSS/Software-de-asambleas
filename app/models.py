@@ -7,6 +7,12 @@ class Rol(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), unique=True, nullable=False)
     descripcion = db.Column(db.String(200))
+    row_version = db.Column(db.Integer, default=1)
+    creado_por = db.Column(db.String(100), default='sistema')
+    creado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    actualizado_por = db.Column(db.String(100), default='sistema')
+    actualizado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
     usuarios = db.relationship('Usuario', backref='rol', lazy=True)
 
 class Usuario(UserMixin, db.Model):
@@ -19,8 +25,11 @@ class Usuario(UserMixin, db.Model):
     nombre_completo = db.Column(db.String(150))
     activo = db.Column(db.Boolean, default=True)
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    row_version = db.Column(db.Integer, default=1)
+    creado_por = db.Column(db.String(100), default='sistema')
+    creado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    actualizado_por = db.Column(db.String(100), default='sistema')
+    actualizado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class Socio(db.Model):
     __tablename__ = 'socios'
@@ -35,12 +44,36 @@ class Socio(db.Model):
     trabajo = db.Column(db.String(100))
     agencia = db.Column(db.String(100))
     situacion = db.Column(db.String(50), default='activo')
-    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    row_version = db.Column(db.Integer, default=1)
+    creado_por = db.Column(db.String(100), default='sistema')
+    creado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    actualizado_por = db.Column(db.String(100), default='sistema')
+    actualizado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
+    estados = db.relationship('Estado', backref='socio', lazy=True, cascade='all, delete-orphan')
     moras = db.relationship('Mora', backref='socio', lazy=True, cascade='all, delete-orphan')
     padrones = db.relationship('PadronAsamblea', backref='socio', lazy=True, cascade='all, delete-orphan')
     votos = db.relationship('Voto', backref='socio', lazy=True, cascade='all, delete-orphan')
+
+    @property
+    def apellidos_nombres(self):
+        return f"{self.apellidos}, {self.nombres}"
+
+class Estado(db.Model):
+    __tablename__ = 'estados'
+    id = db.Column(db.Integer, primary_key=True)
+    socio_id = db.Column(db.Integer, db.ForeignKey('socios.id', ondelete='CASCADE'), nullable=False)
+    mora_cc = db.Column(db.String(20), nullable=False, default='al_dia')
+    mora_sol = db.Column(db.String(20), nullable=False, default='al_dia')
+    mora_ape = db.Column(db.String(20), nullable=False, default='al_dia')
+    mora_credito = db.Column(db.String(20), nullable=False, default='al_dia')
+    mora_cabal = db.Column(db.String(20), nullable=False, default='al_dia')
+    mora_visa = db.Column(db.String(20), nullable=False, default='al_dia')
+    row_version = db.Column(db.Integer, default=1)
+    creado_por = db.Column(db.String(100), default='sistema')
+    creado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    actualizado_por = db.Column(db.String(100), default='sistema')
+    actualizado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class Mora(db.Model):
     __tablename__ = 'moras'
@@ -75,8 +108,11 @@ class PadronAsamblea(db.Model):
     asamblea_id = db.Column(db.Integer, db.ForeignKey('asambleas.id', ondelete='CASCADE'), nullable=False)
     situacion = db.Column(db.String(30), nullable=False, default='pendiente')
     motivo_inhabilitacion = db.Column(db.String(200))
-    fecha_acreditacion = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    row_version = db.Column(db.Integer, default=1)
+    creado_por = db.Column(db.String(100), default='sistema')
+    creado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    actualizado_por = db.Column(db.String(100), default='sistema')
+    actualizado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     credenciales = db.relationship('Credencial', backref='padron', lazy=True, cascade='all, delete-orphan')
 
@@ -85,8 +121,12 @@ class Credencial(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     padron_id = db.Column(db.Integer, db.ForeignKey('padron_asamblea.id', ondelete='CASCADE'), nullable=False)
     descripcion = db.Column(db.String(200))
-    reimpresion = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    reimpresion = db.Column(db.String(10), default='NO')
+    row_version = db.Column(db.Integer, default=1)
+    creado_por = db.Column(db.String(100), default='sistema')
+    creado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    actualizado_por = db.Column(db.String(100), default='sistema')
+    actualizado_el = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class Mocion(db.Model):
     __tablename__ = 'mociones'

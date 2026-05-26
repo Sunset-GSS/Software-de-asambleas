@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required
-from app.models import Socio
+from app.models import Socio, Estado
 from app.extensions import db
 
 bp = Blueprint('socios', __name__, url_prefix='/socios')
@@ -25,9 +25,34 @@ def index():
 @login_required
 def estado(id):
     socio = Socio.query.get_or_404(id)
-    # Lógica para determinar si está habilitado o no basado en moras
-    # (Se asume que la regla es no tener moras activas en los últimos 3 meses)
-    moras_activas = [m for m in socio.moras if m.estado == 'moroso']
+    # Obtener el estado de morosidad
+    estado_socio = Estado.query.filter_by(socio_id=socio.id).first()
+    if not estado_socio:
+        # Si no existe registro de estado, asumimos al día por defecto
+        estado_socio = Estado(
+            socio_id=socio.id,
+            mora_cc='al_dia',
+            mora_sol='al_dia',
+            mora_ape='al_dia',
+            mora_credito='al_dia',
+            mora_cabal='al_dia',
+            mora_visa='al_dia'
+        )
+        db.session.add(estado_socio)
+        db.session.commit()
+        
+    # Verificar si está habilitado (todas las moras deben estar 'al_dia')
+    moras = {
+        'Caja de Ahorro / CC': estado_socio.mora_cc,
+        'Solidaridad': estado_socio.mora_sol,
+        'Aporte': estado_socio.mora_ape,
+        'Créditos': estado_socio.mora_credito,
+        'Tarjeta Cabal': estado_socio.mora_cabal,
+        'Tarjeta Visa': estado_socio.mora_visa
+    }
     
+    moras_activas = {prod: est for prod, est in moras.items() if est == 'moroso'}
     habilitado = len(moras_activas) == 0
-    return render_template('socios/estado.html', socio=socio, moras=moras_activas, habilitado=habilitado)
+    
+    return render_template('socios/estado.html', socio=socio, estado_socio=estado_socio, moras_activas=moras_activas, habilitado=habilitado)
+

@@ -28,7 +28,8 @@
                 <tr>
                     <th>Nro Socio</th>
                     <th>Cédula</th>
-                    <th>Nombres y Apellidos</th>
+                    <th>Apellidos, Nombres</th>
+                    <th>Lugar de Trabajo</th>
                     <th>Agencia</th>
                     <th>Situación</th>
                     <th class="text-end">Acciones</th>
@@ -39,7 +40,8 @@
                 <tr>
                     <td class="fw-bold text-muted">{{ socio.nro_socio }}</td>
                     <td>{{ socio.cedula }}</td>
-                    <td>{{ socio.nombres }} {{ socio.apellidos }}</td>
+                    <td>{{ socio.apellidos_nombres }}</td>
+                    <td>{{ socio.trabajo or 'No definido' }}</td>
                     <td><span class="badge bg-light text-dark">{{ socio.agencia or 'No definida' }}</span></td>
                     <td>
                         {% if socio.situacion == 'activo' %}
@@ -59,7 +61,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">
+                    <td colspan="7" class="text-center py-4 text-muted">
                         No se encontraron socios.
                     </td>
                 </tr>
@@ -69,3 +71,4 @@
     </div>
 </div>
 {% endblock %}
+

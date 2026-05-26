@@ -22,9 +22,30 @@ CREATE TABLE socios (
     fecha_nacimiento DATE,
     fecha_ingreso DATE,
     sexo VARCHAR(15),
+    trabajo VARCHAR(100),
+    agencia VARCHAR(100),
     situacion VARCHAR(50) DEFAULT 'activo',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    row_version INTEGER DEFAULT 1,
+    creado_por VARCHAR(100) DEFAULT 'sistema',
+    creado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100) DEFAULT 'sistema',
+    actualizado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE estados (
+    id SERIAL PRIMARY KEY,
+    socio_id INTEGER NOT NULL REFERENCES socios(id) ON DELETE CASCADE,
+    mora_cc VARCHAR(20) NOT NULL DEFAULT 'al_dia',
+    mora_sol VARCHAR(20) NOT NULL DEFAULT 'al_dia',
+    mora_ape VARCHAR(20) NOT NULL DEFAULT 'al_dia',
+    mora_credito VARCHAR(20) NOT NULL DEFAULT 'al_dia',
+    mora_cabal VARCHAR(20) NOT NULL DEFAULT 'al_dia',
+    mora_visa VARCHAR(20) NOT NULL DEFAULT 'al_dia',
+    row_version INTEGER DEFAULT 1,
+    creado_por VARCHAR(100) DEFAULT 'sistema',
+    creado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100) DEFAULT 'sistema',
+    actualizado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE moras (
@@ -55,8 +76,11 @@ CREATE TABLE padron_asamblea (
     asamblea_id INTEGER NOT NULL REFERENCES asambleas(id) ON DELETE CASCADE,
     situacion VARCHAR(30) NOT NULL DEFAULT 'pendiente',  -- 'habilitado', 'inhabilitado', 'pendiente'
     motivo_inhabilitacion VARCHAR(200),
-    fecha_acreditacion TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    row_version INTEGER DEFAULT 1,
+    creado_por VARCHAR(100) DEFAULT 'sistema',
+    creado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100) DEFAULT 'sistema',
+    actualizado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_padron_socio_asamblea UNIQUE (socio_id, asamblea_id)
 );
 
@@ -64,8 +88,12 @@ CREATE TABLE credenciales (
     id SERIAL PRIMARY KEY,
     padron_id INTEGER NOT NULL REFERENCES padron_asamblea(id) ON DELETE CASCADE,
     descripcion VARCHAR(200),
-    reimpresion BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    reimpresion VARCHAR(10) DEFAULT 'NO',
+    row_version INTEGER DEFAULT 1,
+    creado_por VARCHAR(100) DEFAULT 'sistema',
+    creado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100) DEFAULT 'sistema',
+    actualizado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE mociones (
@@ -98,7 +126,12 @@ CREATE TABLE votos (
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL,
-    descripcion VARCHAR(200)
+    descripcion VARCHAR(200),
+    row_version INTEGER DEFAULT 1,
+    creado_por VARCHAR(100) DEFAULT 'sistema',
+    creado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100) DEFAULT 'sistema',
+    actualizado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE usuarios (
@@ -106,11 +139,15 @@ CREATE TABLE usuarios (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    password_venc TIMESTAMPTZ,
     nombre_completo VARCHAR(150),
     activo BOOLEAN DEFAULT TRUE,
     rol_id INTEGER NOT NULL REFERENCES roles(id),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    row_version INTEGER DEFAULT 1,
+    creado_por VARCHAR(100) DEFAULT 'sistema',
+    creado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100) DEFAULT 'sistema',
+    actualizado_el TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ====================
@@ -129,25 +166,34 @@ CREATE INDEX idx_votos_mocion_id ON votos (mocion_id);
 CREATE INDEX idx_votos_socio_id ON votos (socio_id);
 
 -- ====================
--- Función para actualizar automáticamente updated_at
+-- Función para actualizar automáticamente actualizado_el
 -- ====================
 
 CREATE OR REPLACE FUNCTION actualizar_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.actualizado_el = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Aplicar a tablas que tengan updated_at
-CREATE TRIGGER trg_socios_updated_at BEFORE UPDATE ON socios
+-- Aplicar a tablas que tengan actualizado_el
+CREATE TRIGGER trg_socios_actualizado_el BEFORE UPDATE ON socios
 FOR EACH ROW EXECUTE PROCEDURE actualizar_timestamp();
 
-CREATE TRIGGER trg_asambleas_updated_at BEFORE UPDATE ON asambleas
+CREATE TRIGGER trg_estados_actualizado_el BEFORE UPDATE ON estados
 FOR EACH ROW EXECUTE PROCEDURE actualizar_timestamp();
 
-CREATE TRIGGER trg_usuarios_updated_at BEFORE UPDATE ON usuarios
+CREATE TRIGGER trg_padron_actualizado_el BEFORE UPDATE ON padron_asamblea
+FOR EACH ROW EXECUTE PROCEDURE actualizar_timestamp();
+
+CREATE TRIGGER trg_credenciales_actualizado_el BEFORE UPDATE ON credenciales
+FOR EACH ROW EXECUTE PROCEDURE actualizar_timestamp();
+
+CREATE TRIGGER trg_roles_actualizado_el BEFORE UPDATE ON roles
+FOR EACH ROW EXECUTE PROCEDURE actualizar_timestamp();
+
+CREATE TRIGGER trg_usuarios_actualizado_el BEFORE UPDATE ON usuarios
 FOR EACH ROW EXECUTE PROCEDURE actualizar_timestamp();
 
 -- ====================
