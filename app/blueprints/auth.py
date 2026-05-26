@@ -13,6 +13,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        print(f"DEBUG LOGIN - Username: '{username}', Password: '{password}'")
         
         user = Usuario.query.filter_by(username=username).first()
         

@@ -10,8 +10,8 @@
                 <p class="text-muted small mb-0 mt-2">Por favor, ingresa tus credenciales</p>
             </div>
             <div class="card-body p-4 pt-2">
-                <!-- Usando HTMX para hacer un post sin recarga. Reemplazará el main-content si hay error -->
-                <form hx-post="{{ url_for('auth.login') }}" hx-target="body" hx-push-url="true">
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="username" name="username" placeholder="Nombre de usuario" required autofocus>
@@ -25,7 +25,7 @@
 
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg fw-bold">
-                            Ingresar <span class="htmx-indicator spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                            Ingresar
                         </button>
                     </div>
                 </form>
