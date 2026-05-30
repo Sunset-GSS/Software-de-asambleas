@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Verificar Estado - Mi Voto 2.0{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 mt-5">
+        <div class="card shadow border-0">
+            <div class="card-body p-5 text-center">
+                <div class="mb-4">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-signal fa-3x"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Verificar Estado de Socio</h3>
+                    <p class="text-muted small">Ingresa la cédula o número del socio para validar su situación financiera y obligaciones.</p>
+                </div>
+                
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="input-group input-group-lg mb-3">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-id-card text-muted"></i></span>
+                        <input type="text" name="busqueda" class="form-control border-start-0 ps-0" placeholder="Ej: 1234567 o 30045" required autofocus>
+                        <button class="btn btn-warning" type="submit"><i class="fa-solid fa-search me-1"></i> Buscar</button>
+                    </div>
+                </form>
+                
+                <div class="alert alert-secondary mt-4 text-start small border-0 bg-light">
+                    <i class="fa-solid fa-circle-info me-1"></i> <strong>Nota:</strong> Esta búsqueda verifica el estado general de morosidad. Si el socio no cuenta con un registro financiero generado en el sistema, se crearán sus valores como "Al Día" por defecto.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
