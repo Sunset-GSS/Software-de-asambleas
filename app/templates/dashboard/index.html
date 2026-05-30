@@ -2,12 +2,44 @@
 {% block title %}Panel Principal - Mi Voto 2.0{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
+<div class="row g-4 mb-4">
     <div class="col-12">
         <h2 class="fw-bold text-dark">Bienvenido, {{ current_user.nombre_completo }}</h2>
         <p class="text-muted">Panel de control de Mi Voto 2.0. Tu rol actual es: <span class="badge bg-info text-dark">{{ current_user.rol.nombre|capitalize }}</span></p>
     </div>
 </div>
+
+{% if stats %}
+<div class="row mb-5">
+    <div class="col-md-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie text-primary me-2"></i>Métricas de Acreditación (Asamblea {{ stats.asamblea }})</h5>
+                <hr>
+                <div class="row align-items-center">
+                    <div class="col-md-5 mb-4 mb-md-0 text-center">
+                        <canvas id="acreditacionChart" style="max-height: 250px;"></canvas>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-3">
+                            <span class="fw-bold text-muted"><i class="fa-solid fa-users text-primary me-2"></i>Total Habilitados (Padrón):</span>
+                            <span class="fs-4 fw-bold text-primary">{{ stats.total_habilitados }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center bg-success bg-opacity-10 p-3 rounded mb-3">
+                            <span class="fw-bold text-success"><i class="fa-solid fa-check-circle me-2"></i>Acreditados (Asistentes):</span>
+                            <span class="fs-4 fw-bold text-success">{{ stats.acreditados }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center bg-danger bg-opacity-10 p-3 rounded">
+                            <span class="fw-bold text-danger"><i class="fa-solid fa-times-circle me-2"></i>No Acreditados (Ausentes):</span>
+                            <span class="fs-4 fw-bold text-danger">{{ stats.no_acreditados }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="row g-4">
     <!-- Card Roles -->
@@ -90,4 +122,65 @@
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 </style>
+
+{% if stats %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('acreditacionChart').getContext('2d');
+    const acreditados = {{ stats.acreditados }};
+    const noAcreditados = {{ stats.no_acreditados }};
+    
+    // Si no hay datos, mostrar algo básico
+    if (acreditados === 0 && noAcreditados === 0) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Sin Padrón Generado o Vacío'],
+                datasets: [{ data: [1], backgroundColor: ['#e9ecef'] }]
+            },
+            options: { responsive: true, plugins: { tooltip: { enabled: false } } }
+        });
+        return;
+    }
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Acreditados', 'No Acreditados (Ausentes)'],
+            datasets: [{
+                data: [acreditados, noAcreditados],
+                backgroundColor: [
+                    '#198754', // Success green
+                    '#dc3545'  // Danger red
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) { label += ': '; }
+                            label += context.raw;
+                            
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((context.raw / total) * 100);
+                            label += ` (${percentage}%)`;
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
 {% endblock %}
