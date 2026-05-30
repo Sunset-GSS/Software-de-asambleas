@@ -58,31 +58,16 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Fecha de Nacimiento</label>
-                    <input type="date" name="fecha_nacimiento" class="form-control"
-                           value="{{ socio.fecha_nacimiento.strftime('%Y-%m-%d') if socio and socio.fecha_nacimiento else '' }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Fecha de Ingreso</label>
+                    <label class="form-label fw-semibold">Fecha de Ingreso <span class="text-danger">*</span></label>
                     <input type="date" name="fecha_ingreso" class="form-control"
-                           value="{{ socio.fecha_ingreso.strftime('%Y-%m-%d') if socio and socio.fecha_ingreso else '' }}">
+                           value="{{ socio.fecha_ingreso.strftime('%Y-%m-%d') if socio and socio.fecha_ingreso else '' }}" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Sexo</label>
-                    <select name="sexo" class="form-select">
-                        <option value="">-- Seleccionar --</option>
-                        <option value="masculino" {% if socio and socio.sexo == 'masculino' %}selected{% endif %}>Masculino</option>
-                        <option value="femenino" {% if socio and socio.sexo == 'femenino' %}selected{% endif %}>Femenino</option>
-                        <option value="otro" {% if socio and socio.sexo == 'otro' %}selected{% endif %}>Otro</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6">
                     <label class="form-label fw-semibold">Lugar de Trabajo</label>
                     <input type="text" name="trabajo" class="form-control"
                            value="{{ socio.trabajo if socio and socio.trabajo else '' }}">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label fw-semibold">Agencia</label>
                     <input type="text" name="agencia" class="form-control"
                            value="{{ socio.agencia if socio and socio.agencia else '' }}">
