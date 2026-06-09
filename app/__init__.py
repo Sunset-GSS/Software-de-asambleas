@@ -18,11 +18,34 @@ def create_app(config_class=Config):
     from app.blueprints.socios import bp as socios_bp
     from app.blueprints.asambleas import bp as asambleas_bp
     from app.blueprints.votacion import bp as votacion_bp
+    from app.blueprints.roles import bp as roles_bp
+    from app.blueprints.usuarios import bp as usuarios_bp
+    from app.blueprints.estados import bp as estados_bp
+    from app.blueprints.acreditaciones import bp as acreditaciones_bp
+    from app.blueprints.reportes import bp as reportes_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(socios_bp)
     app.register_blueprint(asambleas_bp)
     app.register_blueprint(votacion_bp)
+    app.register_blueprint(roles_bp)
+    app.register_blueprint(usuarios_bp)
+    app.register_blueprint(estados_bp)
+    app.register_blueprint(acreditaciones_bp)
+    app.register_blueprint(reportes_bp)
+
+    @app.template_filter('mask_name')
+    def mask_name_filter(name):
+        if not name:
+            return name
+        partes = name.split()
+        masked = []
+        for p in partes:
+            if len(p) <= 2:
+                masked.append(p + '*' * 2)
+            else:
+                masked.append(p[:2] + '*' * (len(p) - 2))
+        return ' '.join(masked)
 
     return app
