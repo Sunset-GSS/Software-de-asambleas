@@ -5,6 +5,12 @@ from app.extensions import db
 
 bp = Blueprint('votacion', __name__, url_prefix='/votacion')
 
+@bp.route('/')
+@login_required
+def index():
+    asambleas = Asamblea.query.order_by(Asamblea.fecha.desc()).all()
+    return render_template('votacion/index.html', asambleas=asambleas)
+
 @bp.route('/asamblea/<int:id>/mociones')
 @login_required
 def mociones(id):
