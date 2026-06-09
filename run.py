@@ -14,8 +14,6 @@ except ImportError:
 
 # Load environment variables (.env)
 load_dotenv(override=True)
-# Ensure the DATABASE_URL points to the correct port (5000)
-os.environ['DATABASE_URL'] = os.getenv('DATABASE_URL')
 
 
 
