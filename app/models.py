@@ -22,7 +22,7 @@ class Rol(db.Model):
     usuarios = db.relationship('Usuario', backref='rol', lazy=True)
 
     def tiene_permiso(self, modulo):
-        return self.nombre.lower().strip() == 'administrador' or modulo in (self.permisos or [])
+        return self.nombre.lower().strip() in ('admin', 'administrador') or modulo in (self.permisos or [])
 
 class Usuario(UserMixin, db.Model):
     __tablename__ = 'usuarios'
@@ -43,7 +43,7 @@ class Usuario(UserMixin, db.Model):
 
     def tiene_permiso(self, modulo):
         if self.rol:
-            if self.rol.nombre.lower().strip() == 'administrador':
+            if self.rol.nombre.lower().strip() in ('admin', 'administrador'):
                 return True
             if self.rol.tiene_permiso(modulo):
                 return True
