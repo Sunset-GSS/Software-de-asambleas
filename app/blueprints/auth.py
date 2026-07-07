@@ -83,15 +83,14 @@ def olvide_contrasena():
         <hr><p style="color:#888;font-size:12px;">Mi Voto 2.0</p>
         '''
 
-        # Enviar email en segundo plano — la respuesta web es inmediata
-        def _enviar(app):
-            with app.app_context():
-                enviar_email(email, asunto, cuerpo)
-        hilo = threading.Thread(target=_enviar, args=(current_app._get_current_object(),))
-        hilo.start()
+        # Enviar email de forma sincrónica (máx 10s de espera)
+        enviado = enviar_email(email, asunto, cuerpo)
 
-        flash(f'Se ha enviado una nueva contraseña a {email}. Revisa tu bandeja de entrada.', 'success')
         flash(f'Tu nueva contraseña es: {nueva_pass}', 'warning')
+        if enviado:
+            flash(f'Se ha enviado un correo con la nueva contraseña a {email}.', 'success')
+        else:
+            flash('No se pudo enviar el correo electrónico. Usá la contraseña de arriba para iniciar sesión.', 'danger')
         return redirect(url_for('auth.login'))
 
     return render_template('auth/olvide_contrasena.html')
