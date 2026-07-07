@@ -1,5 +1,6 @@
 import secrets
 import string
+import threading
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import Usuario, LoginLog
@@ -85,10 +86,14 @@ def olvide_contrasena():
 
         enviado = enviar_email(email, asunto, cuerpo)
 
-        if enviado:
-            flash(f'Se ha enviado una nueva contraseña a {email}. Revisa tu bandeja de entrada.', 'success')
-        else:
-            flash('No se pudo enviar el correo. Verifica la configuración SMTP del servidor.', 'warning')
+        # Enviar email en segundo plano para no bloquear la respuesta
+        def _enviar(app):
+            with app.app_context():
+                enviar_email(email, asunto, cuerpo)
+        hilo = threading.Thread(target=_enviar, args=(current_app._get_current_object(),))
+        hilo.start()
+
+        flash(f'Se ha enviado una nueva contraseña a {email}. Revisa tu bandeja de entrada.', 'success')
 
         return redirect(url_for('auth.login'))
 
